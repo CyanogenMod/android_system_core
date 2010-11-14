@@ -150,7 +150,7 @@ void SHA_update(SHA_CTX* ctx, const void* data, int len) {
 
     ctx->count += len;
 
-    while (len > sizeof(ctx->buf) - i) {
+    while (len > (int)sizeof(ctx->buf) - i) {
         memcpy(&ctx->buf.b[i], p, sizeof(ctx->buf) - i);
         len -= sizeof(ctx->buf) - i;
         p += sizeof(ctx->buf) - i;

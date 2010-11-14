@@ -86,7 +86,7 @@ int write_padding(int fd, unsigned pagesize, unsigned itemsize)
 
     count = pagesize - (itemsize & pagemask);
 
-    if(write(fd, padding, count) != count) {
+    if((unsigned)write(fd, padding, count) != count) {
         return -1;
     } else {
         return 0;
@@ -237,14 +237,14 @@ int main(int argc, char **argv)
     if(write(fd, &hdr, sizeof(hdr)) != sizeof(hdr)) goto fail;
     if(write_padding(fd, pagesize, sizeof(hdr))) goto fail;
 
-    if(write(fd, kernel_data, hdr.kernel_size) != hdr.kernel_size) goto fail;
+    if((unsigned)write(fd, kernel_data, hdr.kernel_size) != hdr.kernel_size) goto fail;
     if(write_padding(fd, pagesize, hdr.kernel_size)) goto fail;
 
-    if(write(fd, ramdisk_data, hdr.ramdisk_size) != hdr.ramdisk_size) goto fail;
+    if((unsigned)write(fd, ramdisk_data, hdr.ramdisk_size) != hdr.ramdisk_size) goto fail;
     if(write_padding(fd, pagesize, hdr.ramdisk_size)) goto fail;
 
     if(second_data) {
-        if(write(fd, second_data, hdr.second_size) != hdr.second_size) goto fail;
+        if((unsigned)write(fd, second_data, hdr.second_size) != hdr.second_size) goto fail;
         if(write_padding(fd, pagesize, hdr.ramdisk_size)) goto fail;
     }
 
