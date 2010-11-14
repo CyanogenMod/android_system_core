@@ -862,8 +862,8 @@ void handle_keychord(int fd)
     // only handle keychords if ro.debuggable is set or adb is enabled.
     // the logic here is that bugreports should be enabled in userdebug or eng builds
     // and on user builds for users that are developers.
-    debuggable = property_get("ro.debuggable");
-    adb_enabled = property_get("init.svc.adbd");
+    debuggable = (char *)property_get("ro.debuggable");
+    adb_enabled = (char *)property_get("init.svc.adbd");
     if ((debuggable && !strcmp(debuggable, "1")) ||
         (adb_enabled && !strcmp(adb_enabled, "running"))) {
         ret = read(fd, &id, sizeof(id));

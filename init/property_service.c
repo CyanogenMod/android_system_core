@@ -198,8 +198,8 @@ static int check_control_perms(const char *name, int uid, int gid) {
     /* Search the ACL */
     for (i = 0; control_perms[i].service; i++) {
         if (strcmp(control_perms[i].service, name) == 0) {
-            if ((uid && control_perms[i].uid == uid) ||
-                (gid && control_perms[i].gid == gid)) {
+            if ((uid && (int)control_perms[i].uid == uid) ||
+                (gid && (int)control_perms[i].gid == gid)) {
                 return 1;
             }
         }
@@ -225,7 +225,7 @@ static int check_perms(const char *name, unsigned int uid, int gid)
         if (strncmp(property_perms[i].prefix, name,
                     strlen(property_perms[i].prefix)) == 0) {
             if ((uid && property_perms[i].uid == uid) ||
-                (gid && property_perms[i].gid == gid)) {
+                (gid && (int)property_perms[i].gid == gid)) {
                 return 1;
             }
         }
