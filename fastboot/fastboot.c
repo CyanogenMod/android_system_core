@@ -705,7 +705,7 @@ int main(int argc, char **argv)
     } else if (wants_reboot_bootloader) {
         fb_queue_command("reboot-bootloader", "rebooting into bootloader");
     } else if (wants_powerdown) {
-        fb_queue_command("powerdown", "rebooting into bootloader");
+        fb_queue_command("powerdown", "power off device");
     }
 
     usb = open_device();
