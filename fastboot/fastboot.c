@@ -225,6 +225,7 @@ void usage(void)
             "  devices                                  list all connected devices\n"
             "  reboot                                   reboot device normally\n"
             "  reboot-bootloader                        reboot device into bootloader\n"
+            "  powerdown                                power off device\n"
             "\n"
             "options:\n"
             "  -w                                       erase userdata and cache\n"
@@ -549,6 +550,7 @@ int main(int argc, char **argv)
     int wants_wipe = 0;
     int wants_reboot = 0;
     int wants_reboot_bootloader = 0;
+    int wants_powerdown=0;
     void *data;
     unsigned sz;
     unsigned page_size = 2048;
@@ -622,6 +624,9 @@ int main(int argc, char **argv)
             skip(1);
         } else if(!strcmp(*argv, "reboot-bootloader")) {
             wants_reboot_bootloader = 1;
+            skip(1);
+        } else if(!strcmp(*argv, "powerdown")) {
+            wants_powerdown = 1;
             skip(1);
         } else if (!strcmp(*argv, "continue")) {
             fb_queue_command("continue", "resuming boot");
@@ -699,6 +704,8 @@ int main(int argc, char **argv)
         fb_queue_reboot();
     } else if (wants_reboot_bootloader) {
         fb_queue_command("reboot-bootloader", "rebooting into bootloader");
+    } else if (wants_powerdown) {
+        fb_queue_command("powerdown", "rebooting into bootloader");
     }
 
     usb = open_device();
