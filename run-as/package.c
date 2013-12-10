@@ -519,17 +519,6 @@ get_package_info(const char* pkgName, PackageInfo *info)
 
         string_copy(info->seinfo, sizeof info->seinfo, p, q - p);
 
-        /* skip spaces */
-        if (parse_spaces(&p, end) < 0)
-            goto BAD_FORMAT;
-
-        /* grab the seinfo string */
-        q = skip_non_spaces(p, end);
-        if (q == p)
-            goto BAD_FORMAT;
-
-        string_copy(info->seinfo, sizeof info->seinfo, p, q - p);
-
         /* Ignore the rest */
         result = 0;
         goto EXIT;
