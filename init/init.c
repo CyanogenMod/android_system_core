@@ -735,6 +735,14 @@ static void import_kernel_nv(char *name, int for_emulator)
         property_set("ro.boot.serialno", value);
 #endif
     }
+	else if (!strncmp(name, "syspart", 7) && name_len > 7) {
+        char prop[PROP_NAME_MAX];
+        int cnt;
+
+        cnt = snprintf(prop, sizeof(prop), "ro.boot.%s", name);
+        if (cnt < PROP_NAME_MAX)
+            property_set(prop, value);
+    }
 }
 
 static void export_kernel_boot_props(void)
