@@ -79,7 +79,7 @@ static void _eject(struct stat *s, char *out, int olen, char *data, unsigned dat
 
     total_size += 6 + 8*13 + olen + 1;
 
-    if(strlen(out) != olen) die("ACK!");
+    if((int)strlen(out) != olen) die("ACK!");
 
     while(total_size & 3) {
         total_size++;
