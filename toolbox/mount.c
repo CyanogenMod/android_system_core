@@ -328,8 +328,10 @@ int mount_main(int argc, char *argv[])
 	}
 
 	if (dev == NULL || dir == NULL || type == NULL) {
-		fprintf(stderr, "Usage: %s [-r] [-w] [-o options] [-t type] "
-			"device directory\n", progname);
+		fprintf(stderr, "Usage: %s [-r] [-w] [-o options]... -t type "
+			"device directory\n       %s [-r] [-w] [-o remount "
+			"-o bind -o move] [-o options]... [-t type] device "
+			"directory", progname, progname);
 		exit(1);
 	}
 
