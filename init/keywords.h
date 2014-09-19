@@ -79,6 +79,7 @@ enum {
     KEYWORD(rmdir,       COMMAND, 1, do_rmdir)
     KEYWORD(seclabel,    OPTION,  0, 0)
     KEYWORD(service,     SECTION, 0, 0)
+    KEYWORD(service_redefine,     SECTION, 0, 0)
     KEYWORD(setcon,      COMMAND, 1, do_setcon)
     KEYWORD(setenforce,  COMMAND, 1, do_setenforce)
     KEYWORD(setenv,      OPTION,  2, 0)

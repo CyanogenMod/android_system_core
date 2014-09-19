@@ -45,7 +45,7 @@ struct import {
     const char *filename;
 };
 
-static void *parse_service(struct parse_state *state, int nargs, char **args);
+static void *parse_service(struct parse_state *state, int nargs, char **args, bool redefine);
 static void parse_line_service(struct parse_state *state, int nargs, char **args);
 
 static void *parse_action(struct parse_state *state, int nargs, char **args);
@@ -145,6 +145,7 @@ int lookup_keyword(const char *s)
     case 's':
         if (!strcmp(s, "eclabel")) return K_seclabel;
         if (!strcmp(s, "ervice")) return K_service;
+        if (!strcmp(s, "ervice_redefine")) return K_service_redefine;
         if (!strcmp(s, "etcon")) return K_setcon;
         if (!strcmp(s, "etenforce")) return K_setenforce;
         if (!strcmp(s, "etenv")) return K_setenv;
@@ -328,7 +329,8 @@ void parse_new_section(struct parse_state *state, int kw,
            nargs > 1 ? args[1] : "");
     switch(kw) {
     case K_service:
-        state->context = parse_service(state, nargs, args);
+    case K_service_redefine:
+        state->context = parse_service(state, nargs, args, (kw == K_service_redefine));
         if (state->context) {
             state->parse_line = parse_line_service;
             return;
@@ -673,7 +675,7 @@ int action_queue_empty()
     return list_empty(&action_queue);
 }
 
-static void *parse_service(struct parse_state *state, int nargs, char **args)
+static void *parse_service(struct parse_state *state, int nargs, char **args, bool redefine)
 {
     struct service *svc;
     if (nargs < 3) {
@@ -686,13 +688,18 @@ static void *parse_service(struct parse_state *state, int nargs, char **args)
     }
 
     svc = service_find_by_name(args[1]);
-    if (svc) {
+    if (svc && !redefine) {
         parse_error(state, "ignored duplicate definition of service '%s'\n", args[1]);
         return 0;
     }
 
     nargs -= 2;
-    svc = calloc(1, sizeof(*svc) + sizeof(char*) * nargs);
+
+    if (!svc) {
+        svc = calloc(1, sizeof(*svc) + sizeof(char*) * nargs);
+        redefine = false;
+    }
+
     if (!svc) {
         parse_error(state, "out of memory\n");
         return 0;
@@ -704,7 +711,8 @@ static void *parse_service(struct parse_state *state, int nargs, char **args)
     svc->nargs = nargs;
     svc->onrestart.name = "onrestart";
     list_init(&svc->onrestart.commands);
-    list_add_tail(&service_list, &svc->slist);
+    if (!redefine)
+        list_add_tail(&service_list, &svc->slist);
     return svc;
 }
 
