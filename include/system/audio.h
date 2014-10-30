@@ -516,9 +516,12 @@ enum {
                                AUDIO_DEVICE_IN_USB_DEVICE |
                                AUDIO_DEVICE_IN_PROXY |
                                AUDIO_DEVICE_IN_ANC_HEADSET |
-#ifdef QCOM_HARDWARE && !defined(ICS_AUDIO_BLOB) && !defined(MR0_AUDIO_BLOB)
+#ifdef QCOM_HARDWARE
+#if !defined(ICS_AUDIO_BLOB) && !defined(MR0_AUDIO_BLOB)
+
                                AUDIO_DEVICE_IN_FM_RX |
                                AUDIO_DEVICE_IN_FM_RX_A2DP |
+#endif
 #endif
                                AUDIO_DEVICE_IN_DEFAULT),
     AUDIO_DEVICE_IN_ALL_SCO = AUDIO_DEVICE_IN_BLUETOOTH_SCO_HEADSET,
