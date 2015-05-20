@@ -71,6 +71,10 @@ ifneq ($(WINDOWS_HOST_ONLY),1)
 
 endif
 
+ifeq ($(TARGET_DEVICE),g620_a2)
+    commonSources += \
+	huawei.c
+endif
 
 # Static library for host
 # ========================================================

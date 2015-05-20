@@ -567,6 +567,10 @@ int __android_log_buf_print(int bufID, int prio, const char *tag, const char *fm
 #endif
     ;
 
+#ifdef HUAWEI_LOG
+void __android_logPower_print(void) {};
+#endif
+
 #ifdef __cplusplus
 }
 #endif
