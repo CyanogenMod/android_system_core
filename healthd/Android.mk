@@ -15,9 +15,14 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := \
 	healthd.cpp \
 	healthd_mode_android.cpp \
-	healthd_mode_charger.cpp \
 	BatteryMonitor.cpp \
 	BatteryPropertiesRegistrar.cpp
+	
+ifeq ($(strip $(BOARD_HEALTHD_CUSTOM_CHARGER)),)
+  LOCAL_SRC_FILES += healthd_mode_charger.cpp
+else
+  LOCAL_SRC_FILES += ../../../$(BOARD_HEALTHD_CUSTOM_CHARGER)
+endif
 
 LOCAL_MODULE := healthd
 LOCAL_MODULE_TAGS := optional
@@ -81,8 +86,13 @@ include $$(BUILD_PREBUILT)
 endef
 
 _img_modules :=
+ifeq ($(strip $(BOARD_HEALTHD_CUSTOM_CHARGER_RES)),)
+IMAGES_DIR := images
+else
+IMAGES_DIR := ../../../$(BOARD_HEALTHD_CUSTOM_CHARGER_RES)
+endif
 _images :=
-$(foreach _img, $(call find-subdir-subdir-files, "images", "*.png"), \
+$(foreach _img, $(call find-subdir-subdir-files, "$(IMAGES_DIR)", "*.png"), \
   $(eval $(call _add-charger-image,$(_img))))
 
 include $(CLEAR_VARS)
