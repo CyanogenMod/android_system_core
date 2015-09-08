@@ -45,6 +45,7 @@
 #include <utils/threads.h>
 #include <utils/Log.h>
 
+#include <cutils/iosched_policy.h>
 #include <cutils/sched_policy.h>
 
 #ifdef HAVE_ANDROID_OS
@@ -338,6 +339,8 @@ int androidSetThreadPriority(pid_t tid, int pri)
     } else {
         errno = lasterr;
     }
+
+    android_set_bfqio_prio(tid, pri);
 #endif
     
     return rc;
