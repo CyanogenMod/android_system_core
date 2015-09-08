@@ -22,13 +22,21 @@
 #include <unistd.h>
 
 #include <cutils/iosched_policy.h>
+#define LOG_TAG "iosched_policy"
+#include <cutils/log.h>
 
 #ifdef HAVE_ANDROID_OS
 #include <linux/ioprio.h>
 #include <sys/syscall.h>
+#include <sys/stat.h>
 #define __android_unused
 #else
 #define __android_unused __attribute__((__unused__))
+#endif
+
+#ifdef HAVE_ANDROID_OS
+static int __bfqio_prio_supported = -1;
+#define PRId32 "I32d"
 #endif
 
 int android_set_ioprio(int pid __android_unused, IoSchedClass clazz __android_unused, int ioprio __android_unused) {
@@ -55,4 +63,76 @@ int android_get_ioprio(int pid __android_unused, IoSchedClass *clazz, int *iopri
     *ioprio = 0;
 #endif
     return 0;
+}
+
+int android_set_bfqio_prio(int tid __android_unused, int prio __android_unused)
+{
+    int rc = 0;
+#ifdef HAVE_ANDROID_OS
+    char buf[128];
+    char *group = "";
+    struct stat st;
+    int fd;
+
+    if (__bfqio_prio_supported == 0)
+        return -1;
+
+    if (__bfqio_prio_supported < 0) {
+        if (stat("/sys/fs/cgroup/bfqio/tasks", &st) || !S_ISREG(st.st_mode)) {
+            __bfqio_prio_supported = 0;
+            return -1;
+        }
+        __bfqio_prio_supported = 1;
+    }
+
+    if (prio <= -16)
+        group = "rt-audio/";
+    else if (prio <= -4)
+        group = "rt-display/";
+    else if (prio == -2)
+        group = "fg/";
+    else if (prio >= 18)
+        group ="idle/";
+    else if (prio >= 10)
+        group = "bg/";
+
+    snprintf(buf, 128, "/sys/fs/cgroup/bfqio/%stasks", group);
+
+#ifdef HAVE_GETTID
+    if (tid == 0) {
+        tid = gettid();
+    }
+#endif
+
+    fd = open(buf, O_WRONLY);
+    if (fd < 0)
+        return -1;
+
+    // specialized itoa -- works for tid > 0
+    char text[22];
+    char *end = text + sizeof(text) - 1;
+    char *ptr = end;
+    *ptr = '\0';
+    while (tid > 0) {
+        *--ptr = '0' + (tid % 10);
+        tid = tid / 10;
+    }
+
+    if (write(fd, ptr, end - ptr) < 0) {
+        /*
+         * If the thread is in the process of exiting,
+         * don't flag an error
+         */
+        if (errno == ESRCH)
+                goto out;
+        SLOGW("android_set_bfqio_prio failed to write '%s' (%s); path=%s\n",
+              ptr, strerror(errno), buf);
+        rc = -1;
+    }
+
+out:
+    close(fd);
+
+#endif
+    return rc;
 }
