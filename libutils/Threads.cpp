@@ -45,6 +45,7 @@
 #include <utils/threads.h>
 #include <utils/Log.h>
 
+#include <cutils/iosched_policy.h>
 #include <cutils/sched_policy.h>
 
 #ifdef HAVE_ANDROID_OS
@@ -94,6 +95,8 @@ struct thread_data_t {
             set_sched_policy(0, SP_FOREGROUND);
         }
         
+        android_set_bfqio_prio(0, prio);
+
         if (name) {
             androidSetThreadName(name);
             free(name);
@@ -338,6 +341,8 @@ int androidSetThreadPriority(pid_t tid, int pri)
     } else {
         errno = lasterr;
     }
+
+    android_set_bfqio_prio(tid, pri);
 #endif
     
     return rc;
@@ -748,6 +753,7 @@ int Thread::_threadLoop(void* user)
 #ifdef HAVE_ANDROID_OS
     // this is very useful for debugging with gdb
     self->mTid = gettid();
+    android_set_bfqio_prio(self->mTid, androidGetThreadPriority(self->mTid));
 #endif
 
     bool first = true;
