@@ -563,6 +563,7 @@ service surfaceflinger /system/bin/surfaceflinger
     class core
     user system
     group graphics drmrpc
+    ioprio rt 6
     onrestart restart zygote
 
 service drm /system/bin/drmserver
