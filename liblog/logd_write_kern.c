@@ -76,6 +76,21 @@ int __android_log_dev_available(void)
     return (g_log_status == kLogAvailable);
 }
 
+signed int __htclog_read_masks(char *buf __unused, signed int len __unused)
+{
+    return 255;
+}
+
+int __htclog_init_mask(const char *a1 __unused, unsigned int a2 __unused, int a3 __unused)
+{
+    return 255;
+}
+
+int __htclog_print_private(int a1 __unused, const char *a2 __unused, const char *fmt __unused, ...)
+{
+    return 255;
+}
+
 static int __write_to_log_null(log_id_t log_fd __unused, struct iovec *vec __unused,
                                size_t nr __unused)
 {
