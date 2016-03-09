@@ -25,10 +25,12 @@ include $(CLEAR_VARS)
 liblog_cflags := -DLIBLOG_LOG_TAG=1005
 
 ifneq ($(TARGET_USES_LOGD),false)
-liblog_sources := logd_write.c log_event_write.c
+liblog_sources := logd_write.c
 else
 liblog_sources := logd_write_kern.c
 endif
+
+liblog_sources += log_event_write.c
 
 # some files must not be compiled when building against Mingw
 # they correspond to features not used by our host development tools
