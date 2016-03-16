@@ -23,6 +23,30 @@ endif
 
 include $(BUILD_STATIC_LIBRARY)
 
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES:= fs_mgr.c fs_mgr_verity.c fs_mgr_fstab.c
+LOCAL_SRC_FILES += fs_mgr_format.c
+
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/include \
+    system/vold \
+    system/extras/ext4_utils \
+    external/openssl/include \
+    system/core/logwrapper/include
+
+LOCAL_MODULE:= libfs_mgr
+LOCAL_WHOLE_STATIC_LIBRARIES := liblogwrap libmincrypt libext4_utils_static libsquashfs_utils libsparse_static libext2_blkid libext2_uuid_static
+LOCAL_STATIC_LIBRARIES := libcutils liblog libsparse_static libz libselinux
+LOCAL_C_INCLUDES += system/extras/ext4_utils system/extras/squashfs_utils external/e2fsprogs/lib
+LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/include
+LOCAL_CFLAGS := -Werror
+
+ifneq (,$(filter userdebug,$(TARGET_BUILD_VARIANT)))
+LOCAL_CFLAGS += -DALLOW_ADBD_DISABLE_VERITY=1
+endif
+
+include $(BUILD_SHARED_LIBRARY)
+
 
 
 include $(CLEAR_VARS)
