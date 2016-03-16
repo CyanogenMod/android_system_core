@@ -92,8 +92,12 @@ static int add_tid_to_cgroup(int tid, int fd)
          */
         if (errno == ESRCH)
                 return 0;
-        SLOGW("add_tid_to_cgroup failed to write '%s' (%s); fd=%d\n",
-              ptr, strerror(errno), fd);
+        char *name = (char *)calloc(1024,sizeof(char));
+        sprintf(name, "/proc/%d/comm", tid);
+        FILE *f = fopen(name, "r");
+        size_t size = fread(name, sizeof(char), 1024, f);
+        SLOGW("add_tid_to_cgroup failed to write '%s(%s)' (%s); fd=%d\n",
+              ptr, name, strerror(errno), fd);
         errno = EINVAL;
         return -1;
     }
