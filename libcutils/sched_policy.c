@@ -53,8 +53,8 @@ static inline SchedPolicy _policy(SchedPolicy p)
 #define TIMER_SLACK_FG 50000
 
 static pthread_once_t the_once = PTHREAD_ONCE_INIT;
-static pthread_once_t sched_once = PTHREAD_ONCE_INIT;
-static pthread_once_t cpuset_once = PTHREAD_ONCE_INIT;
+static pthread_once_t the_sched_once = PTHREAD_ONCE_INIT;
+static pthread_once_t the_cpuset_once = PTHREAD_ONCE_INIT;
 
 static int __sys_supports_schedgroups = -1;
 static int __sys_supports_cpusets = -1;
@@ -303,7 +303,7 @@ int get_sched_policy(int tid, SchedPolicy *policy)
         tid = gettid();
     }
 
-    pthread_once(&sched_once, __init_sched);
+    pthread_once(&the_sched_once, __init_sched);
 
     if (__sys_supports_schedgroups) {
         char grpBuf[32];
@@ -343,7 +343,7 @@ int set_cpuset_policy(int tid, SchedPolicy policy)
         tid = gettid();
     }
 
-    pthread_once(&cpuset_once, __init_cpuset);
+    pthread_once(&the_cpuset_once, __init_cpuset);
 
     if (!__sys_supports_cpusets)
         return set_sched_policy(tid, policy);
@@ -384,7 +384,7 @@ int set_sched_policy(int tid, SchedPolicy policy)
     }
     policy = _policy(policy);
 
-    pthread_once(&sched_once, __init_sched);
+    pthread_once(&the_sched_once, __init_sched);
 
 #if POLICY_DEBUG
     char statfile[64];
