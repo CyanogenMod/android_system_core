@@ -1020,6 +1020,24 @@ static int charging_mode_booting(void) {
 #endif
 }
 
+static int charging_mode_booting(void) {
+#ifndef BOARD_CHARGING_MODE_BOOTING_LPM
+    return 0;
+#else
+    int f;
+    char cmb;
+    f = open(BOARD_CHARGING_MODE_BOOTING_LPM, O_RDONLY);
+    if (f < 0)
+        return 0;
+
+    if (1 != read(f, (void *)&cmb,1))
+        return 0;
+
+    close(f);
+    return ('1' == cmb);
+#endif
+}
+
 int main(int argc, char** argv) {
     if (!strcmp(basename(argv[0]), "ueventd")) {
         return ueventd_main(argc, argv);
@@ -1131,7 +1149,7 @@ int main(int argc, char** argv) {
 
     // Don't mount filesystems or start core system services in charger mode.
     char bootmode[PROP_VALUE_MAX];
-    if (((property_get("ro.bootmode", bootmode) > 0 && strcmp(bootmode, "charger") == 0) ||
+    if (charging_mode_booting() || (property_get("ro.bootmode", bootmode) > 0 && strcmp(bootmode, "charger") == 0)) {
          strcmp(battchg_pause, BOARD_CHARGING_CMDLINE_VALUE) == 0)
                || charging_mode_booting()) {
         action_for_each_trigger("charger", action_add_queue_tail);
