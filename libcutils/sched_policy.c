@@ -58,7 +58,7 @@ static pthread_once_t cpuset_once = PTHREAD_ONCE_INIT;
 
 static int __sys_supports_schedgroups = -1;
 static int __sys_supports_cpusets = -1;
-static char proc_name[32] = {0};
+static char *proc_name;
 
 // File descriptors open to /dev/cpuctl/../tasks, setup by initialize, or -1 on error.
 static int bg_cgroup_fd = -1;
@@ -68,6 +68,8 @@ static int fg_cgroup_fd = -1;
 static int system_bg_cpuset_fd = -1;
 static int bg_cpuset_fd = -1;
 static int fg_cpuset_fd = -1;
+
+static void __initialize_name(void);
 
 static int write_tid_to_fd(int tid, int fd)
 {
@@ -98,12 +100,14 @@ static int write_tid_to_fd(int tid, int fd)
 static int add_tid_to_cgroup(int tid, int fd)
 {
     if (fd < 0) {
+        pthread_once(&the_once, __initialize_name);
         SLOGE("%s add_tid_to_cgroup failed; fd=%d\n", proc_name, fd);
         errno = EINVAL;
         return -1;
     }
 
     if (write_tid_to_fd(tid, fd) != 0) {
+        pthread_once(&the_once, __initialize_name);
         SLOGW("%s add_tid_to_cgroup failed to write '%d' (%s); fd=%d\n",
               proc_name, tid, strerror(errno), fd);
         errno = EINVAL;
@@ -116,38 +120,52 @@ static int add_tid_to_cgroup(int tid, int fd)
 static int add_tid_to_cpuset(int tid, int fd)
 {
     if (fd < 0) {
+        pthread_once(&the_once, __initialize_name);
         SLOGE("%s add_tid_to_cpuset failed; fd=%d\n", proc_name, fd);
         errno = EINVAL;
         return -1;
     }
 
     if (write_tid_to_fd(tid, fd) != 0) {
+        pthread_once(&the_once, __initialize_name);
         SLOGW("%s add_tid_to_cpuset failed to write '%d' (%s); fd=%d\n",
               proc_name, tid, strerror(errno), fd);
         errno = EINVAL;
         return -1;
     }
-
     return 0;
 }
 
-static void __initialize(void) {
+static void __initialize_name(void) {
     int pfd;
     int ptid = gettid();
+    int name_len = 0;
+    char temp_name[256] = {0};
 
     sprintf(proc_name, "/proc/%d/cmdline", ptid);
 
     pfd = open(proc_name, O_RDONLY);
     if (pfd > 0) {
-        read(pfd, proc_name, sizeof(proc_name) - 1);
+        name_len = read(pfd, temp_name, sizeof(temp_name) - 1);
         close(pfd);
     }
+
+    if (name_len) {
+        proc_name = strdup(temp_name);
+    } else {
+        proc_name = strdup("unknown");
+    }
+}
+
+int __attribute__((destructor)) __cleanup(void)
+{
+    free(proc_name);
+    return 0;
 }
 
 static void __init_sched(void) {
     char* filename;
 
-    pthread_once(&the_once, __initialize);
 
     if (!access("/dev/cpuctl/tasks", F_OK)) {
         __sys_supports_schedgroups = 1;
@@ -155,6 +173,7 @@ static void __init_sched(void) {
         filename = "/dev/cpuctl/tasks";
         fg_cgroup_fd = open(filename, O_WRONLY | O_CLOEXEC);
         if (fg_cgroup_fd < 0) {
+            pthread_once(&the_once, __initialize_name);
             SLOGE("%s open of %s failed: %s\n", proc_name, filename, strerror(errno));
             __sys_supports_schedgroups = 0;
         }
@@ -162,6 +181,7 @@ static void __init_sched(void) {
         filename = "/dev/cpuctl/bg_non_interactive/tasks";
         bg_cgroup_fd = open(filename, O_WRONLY | O_CLOEXEC);
         if (bg_cgroup_fd < 0) {
+            pthread_once(&the_once, __initialize_name);
             SLOGE("%s open of %s failed: %s\n", proc_name, filename, strerror(errno));
             __sys_supports_schedgroups = 0;
         }
@@ -181,8 +201,6 @@ static void __init_sched(void) {
 static void __init_cpuset(void) {
     char *filename;
 
-    pthread_once(&the_once, __initialize);
-
 #ifdef USE_CPUSETS
     if (!access("/dev/cpuset/tasks", F_OK)) {
         __sys_supports_cpusets = 1;
@@ -190,6 +208,7 @@ static void __init_cpuset(void) {
         filename = "/dev/cpuset/foreground/tasks";
         fg_cpuset_fd = open(filename, O_WRONLY | O_CLOEXEC);
         if (fg_cpuset_fd < 0) {
+            pthread_once(&the_once, __initialize_name);
             SLOGE("%s open of %s failed %s\n", proc_name, filename, strerror(errno));
             __sys_supports_cpusets = 0;
         }
@@ -197,6 +216,7 @@ static void __init_cpuset(void) {
         filename = "/dev/cpuset/background/tasks";
         bg_cpuset_fd = open(filename, O_WRONLY | O_CLOEXEC);
         if (bg_cpuset_fd < 0) {
+            pthread_once(&the_once, __initialize_name);
             SLOGE("%s open of %s failed %s\n", proc_name, filename, strerror(errno));
             __sys_supports_cpusets = 0;
         }
@@ -204,6 +224,7 @@ static void __init_cpuset(void) {
         filename = "/dev/cpuset/system-background/tasks";
         system_bg_cpuset_fd = open(filename, O_WRONLY | O_CLOEXEC);
         if (system_bg_cpuset_fd < 0) {
+            pthread_once(&the_once, __initialize_name);
             SLOGE("%s open of %s failed %s\n", proc_name, filename, strerror(errno));
             __sys_supports_cpusets = 0;
         }
@@ -284,10 +305,12 @@ static int getSchedulerGroup(int tid, char* buf, size_t bufLen)
         return 0;
     }
 
+    pthread_once(&the_once, __initialize_name);
     SLOGE("%s Failed to find cpu subsys", proc_name);
     fclose(fp);
     return -1;
  out_bad_data:
+    pthread_once(&the_once, __initialize_name);
     SLOGE("%s Bad cgroup data {%s}", proc_name, lineBuf);
     fclose(fp);
     return -1;
