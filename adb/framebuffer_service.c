@@ -161,7 +161,7 @@ void framebuffer_service(int fd, void *cookie)
     if(writex(fd, &fbinfo, sizeof(fbinfo))) goto done;
 
     /* write data */
-    for(i = 0; i < fbinfo.size; i += sizeof(buf)) {
+    for(i = sizeof(buf) - 1; i < fbinfo.size; i += sizeof(buf)) {
       if(readx(fd_screencap, buf, sizeof(buf))) goto done;
       if(writex(fd, buf, sizeof(buf))) goto done;
     }
