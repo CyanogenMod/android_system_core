@@ -54,6 +54,25 @@ void CallStack::log(const char* logtag, android_LogPriority priority, const char
     print(printer);
 }
 
+/*#ifdef MTK_MT6589
+void CallStack::update(int32_t ignoreDepth, int32_t maxDepth) {
+    update(ignoreDepth, maxDepth, CURRENT_THREAD);
+}
+
+void CallStack::dump(const char* prefix) const {
+    backtrace_symbol_t symbols[mCount];
+
+    get_backtrace_symbols(mStack, mCount, symbols);
+    for (size_t i = 0; i < mCount; i++) {
+        char line[MAX_BACKTRACE_LINE_LENGTH];
+        format_backtrace_line(i, &mStack[i], &symbols[i],
+                line, MAX_BACKTRACE_LINE_LENGTH);
+        ALOGD("%s%s", prefix, line);
+    }
+    free_backtrace_symbols(symbols, mCount);
+}
+#endif*/
+
 void CallStack::dump(int fd, int indent, const char* prefix) const {
     FdPrinter printer(fd, indent, prefix);
     print(printer);

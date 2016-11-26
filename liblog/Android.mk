@@ -57,7 +57,7 @@ endif
 # ========================================================
 LOCAL_MODULE := liblog
 LOCAL_SRC_FILES := $(liblog_host_sources)
-LOCAL_CFLAGS := -DFAKE_LOG_DEVICE=1 -Werror
+LOCAL_CFLAGS := -DFAKE_LOG_DEVICE=1
 LOCAL_MULTILIB := both
 include $(BUILD_HOST_STATIC_LIBRARY)
 
@@ -79,13 +79,16 @@ endif
 include $(CLEAR_VARS)
 LOCAL_MODULE := liblog
 LOCAL_SRC_FILES := $(liblog_target_sources)
-LOCAL_CFLAGS := $(LIBLOG_CFLAGS) -Werror
+LOCAL_CFLAGS := $(LIBLOG_CFLAGS) 
+ifeq ($(TARGET_BOARD_PLATFORM),mt6589)
+LOCAL_CFLAGS += -DMTK_MT6589
+endif
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := liblog
 LOCAL_WHOLE_STATIC_LIBRARIES := liblog
-LOCAL_CFLAGS := $(LIBLOG_CFLAGS) -Werror
+LOCAL_CFLAGS := $(LIBLOG_CFLAGS) 
 include $(BUILD_SHARED_LIBRARY)
 
 include $(call first-makefiles-under,$(LOCAL_PATH))
