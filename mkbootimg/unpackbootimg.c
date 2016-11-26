@@ -10,6 +10,8 @@
 #include "mincrypt/sha.h"
 #include "bootimg.h"
 
+#define MT65XX_IDENTITY     "KERNEL"
+
 typedef unsigned char byte;
 
 int read_padding(FILE* f, unsigned itemsize, int pagesize)
@@ -52,6 +54,8 @@ int main(int argc, char** argv)
     char* directory = "./";
     char* filename = NULL;
     int pagesize = 0;
+    char check_mt65xx[15];
+    int mt65xx_kernel = 0;
 
     argc--;
     argv++;
@@ -93,12 +97,12 @@ int main(int argc, char** argv)
         return 1;
     }
     fseek(f, i, SEEK_SET);
-    printf("Android magic found at: %d\n", i);
+    // printf("Android magic found at: %d\n", i);
 
     fread(&header, sizeof(header), 1, f);
-    printf("BOARD_KERNEL_CMDLINE %s\n", header.cmdline);
+    /* printf("BOARD_KERNEL_CMDLINE %s\n", header.cmdline);
     printf("BOARD_KERNEL_BASE %08x\n", header.kernel_addr - 0x00008000);
-    printf("BOARD_PAGE_SIZE %d\n", header.page_size);
+    printf("BOARD_PAGE_SIZE %d\n", header.page_size); */
     
     if (pagesize == 0) {
         pagesize = header.page_size;
@@ -130,11 +134,25 @@ int main(int argc, char** argv)
     sprintf(tmp, "%s/%s", directory, basename(filename));
     strcat(tmp, "-zImage");
     FILE *k = fopen(tmp, "wb");
-    byte* kernel = (byte*)malloc(header.kernel_size);
-    //printf("Reading kernel...\n");
-    fread(kernel, header.kernel_size, 1, f);
+    // Check whether this is a mt65xx kernel
+    memset(check_mt65xx, 0, sizeof(check_mt65xx));
+    fread(check_mt65xx, 14, 1, f);
+    if (!strncasecmp(check_mt65xx + 8, MT65XX_IDENTITY, 6)) {
+        // MT65xx kernel, skip 512 bytes from the page boundary
+        fseek(f, total_read + 512, SEEK_SET);
+        byte* kernel = (byte*)malloc(header.kernel_size - 512);
+        fread(kernel, header.kernel_size - 512, 1, f);
+        fwrite(kernel, header.kernel_size - 512, 1, k);
+
+	printf("MT65xx kernel found. Will chop kernel & ramdisk.\n");
+        mt65xx_kernel = 1;
+    } else {
+        fseek(f, total_read, SEEK_SET);
+        byte* kernel = (byte*)malloc(header.kernel_size);
+        fread(kernel, header.kernel_size, 1, f);
+        fwrite(kernel, header.kernel_size, 1, k);
+    }
     total_read += header.kernel_size;
-    fwrite(kernel, header.kernel_size, 1, k);
     fclose(k);
 
     //printf("total read: %d\n", header.kernel_size);
@@ -143,11 +161,17 @@ int main(int argc, char** argv)
     sprintf(tmp, "%s/%s", directory, basename(filename));
     strcat(tmp, "-ramdisk.gz");
     FILE *r = fopen(tmp, "wb");
-    byte* ramdisk = (byte*)malloc(header.ramdisk_size);
-    //printf("Reading ramdisk...\n");
-    fread(ramdisk, header.ramdisk_size, 1, f);
+    if (mt65xx_kernel) {
+        fseek(f, total_read + 512, SEEK_SET);
+        byte* ramdisk = (byte*)malloc(header.ramdisk_size - 512);
+        fread(ramdisk, header.ramdisk_size - 512, 1, f);
+        fwrite(ramdisk, header.ramdisk_size - 512, 1, r);
+    } else {
+        byte* ramdisk = (byte*)malloc(header.ramdisk_size);
+        fread(ramdisk, header.ramdisk_size, 1, f);
+        fwrite(ramdisk, header.ramdisk_size, 1, r);
+    }
     total_read += header.ramdisk_size;
-    fwrite(ramdisk, header.ramdisk_size, 1, r);
     fclose(r);
     
     fclose(f);
