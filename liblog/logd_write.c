@@ -496,6 +496,26 @@ int __android_log_write(int prio, const char *tag, const char *msg)
     if (!tag)
         tag = "";
 
+    // Prevent MTK audio libs from spamming in the log
+    if (!strcmp(tag, "AudioMTKFilterManager") ||
+        !strcmp(tag, "AudioMTKFilter") ||
+        !strcmp(tag, "AudioMTKStreamOut") ||
+        !strcmp(tag, "AudioVPWStreamIn") ||
+        !strcmp(tag, "AudioDigitalControl") ||
+        !strcmp(tag, "AudioLoopbackController") ||
+        !strcmp(tag, "AudioMTKVolumeController") ||
+        !strcmp(tag, "AudioDigitalControl") ||
+        !strcmp(tag, "AudioAnalogControl") ||
+        !strcmp(tag, "AudioAfeReg") ||
+        !strcmp(tag, "AudioAnalogReg") ||
+        !strcmp(tag, "AudioPlatformDevice") ||
+        !strcmp(tag, "AudioMachineDevice") ||
+        !strcmp(tag, "MtkAudioLoud") ||
+        !strcmp(tag, "LoopbackManager") ||
+        !strcmp(tag, "AudioInterConnection")) {
+            return 0;
+    }
+
     /* XXX: This needs to go! */
     if (!strcmp(tag, "HTC_RIL") ||
         !strncmp(tag, "RIL", 3) || /* Any log tag with "RIL" as the prefix */
