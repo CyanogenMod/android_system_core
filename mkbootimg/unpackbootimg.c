@@ -74,6 +74,18 @@ int main(int argc, char** argv)
     if (filename == NULL) {
         return usage();
     }
+
+    // does directory exist? 
+    if (access(directory, F_OK) == -1) {
+        if(errno == ENOENT) {
+            printf("directory does not exist: '%s'\n", directory);
+        } else if (errno == ENOTDIR) {
+            printf("file is not a directory: '%s'\n", directory);
+        } else {
+            printf("could not access directory: '%s'\n", directory);
+        }
+        return usage();
+    }
     
     int total_read = 0;
     FILE* f = fopen(filename, "rb");
