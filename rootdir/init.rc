@@ -554,12 +554,12 @@ service debuggerd /system/bin/debuggerd
 service debuggerd64 /system/bin/debuggerd64
     class main
 
-service ril-daemon /system/bin/rild
-    class main
-    socket rild stream 660 root radio
-    socket rild-debug stream 660 radio system
-    user root
-    group radio cache inet misc audio sdcard_rw qcom_diag log
+#service ril-daemon /system/bin/rild
+#    class main
+#    socket rild stream 660 root radio
+#    socket rild-debug stream 660 radio system
+#    user root
+#    group radio cache inet misc audio sdcard_rw qcom_diag log
 
 service surfaceflinger /system/bin/surfaceflinger
     class core
@@ -570,12 +570,14 @@ service surfaceflinger /system/bin/surfaceflinger
 service drm /system/bin/drmserver
     class main
     user drm
-    group drm system inet drmrpc
+	# MTK
+    group drm system inet drmrpc sdcard_r
 
 service media /system/bin/mediaserver
     class main
-    user media
-    group audio camera inet net_bt net_bt_admin net_bw_acct drmrpc mediadrm qcom_diag
+	# MTK
+    user root
+    group audio camera inet net_bt net_bt_admin net_bw_acct drmrpc mediadrm media sdcard_r system net_bt_stack qcom_diag
     ioprio rt 4
 
 # One shot invocation to deal with encrypted volume.
@@ -595,7 +597,8 @@ service encrypt /system/bin/vdc --wait cryptfs enablecrypto inplace default
 service bootanim /system/bin/bootanimation
     class core
     user graphics
-    group graphics audio
+	# MTK
+    group graphics media audio
     disabled
     oneshot
 

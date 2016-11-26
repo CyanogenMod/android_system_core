@@ -55,6 +55,8 @@ static pthread_once_t the_once = PTHREAD_ONCE_INIT;
 
 static int __sys_supports_schedgroups = -1;
 
+static int is_mtk_schedgroups = 0;
+
 // File descriptors open to /dev/cpuctl/../tasks, setup by initialize, or -1 on error.
 static int bg_cgroup_fd = -1;
 static int fg_cgroup_fd = -1;
@@ -110,7 +112,7 @@ static int add_tid_to_cgroup(int tid, SchedPolicy policy)
 
 static void __initialize(void) {
     char* filename;
-    if (!access("/dev/cpuctl/tasks", F_OK)) {
+    if (access("/dev/cpuctl/apps", F_OK) == -ENOENT && !access("/dev/cpuctl/tasks", F_OK)) {
         __sys_supports_schedgroups = 1;
 
         filename = "/dev/cpuctl/tasks";
@@ -120,6 +122,22 @@ static void __initialize(void) {
         }
 
         filename = "/dev/cpuctl/bg_non_interactive/tasks";
+        bg_cgroup_fd = open(filename, O_WRONLY | O_CLOEXEC);
+        if (bg_cgroup_fd < 0) {
+            SLOGE("open of %s failed: %s\n", filename, strerror(errno));
+        }
+    } else if (!access("/dev/cpuctl/apps/tasks", F_OK)) {
+        /* be compatible with MTK cgroup hierarchy */
+        __sys_supports_schedgroups = 1;
+        is_mtk_schedgroups = 1;
+
+        filename = "/dev/cpuctl/apps/tasks";
+        fg_cgroup_fd = open(filename, O_WRONLY | O_CLOEXEC);
+        if (fg_cgroup_fd < 0) {
+            SLOGE("open of %s failed: %s\n", filename, strerror(errno));
+        }
+
+        filename = "/dev/cpuctl/apps/bg_non_interactive/tasks";
         bg_cgroup_fd = open(filename, O_WRONLY | O_CLOEXEC);
         if (bg_cgroup_fd < 0) {
             SLOGE("open of %s failed: %s\n", filename, strerror(errno));
@@ -214,13 +232,26 @@ int get_sched_policy(int tid, SchedPolicy *policy)
         char grpBuf[32];
         if (getSchedulerGroup(tid, grpBuf, sizeof(grpBuf)) < 0)
             return -1;
-        if (grpBuf[0] == '\0') {
-            *policy = SP_FOREGROUND;
-        } else if (!strcmp(grpBuf, "bg_non_interactive")) {
-            *policy = SP_BACKGROUND;
+        if (is_mtk_schedgroups) {
+            /* MTK cgroup hierarchy */
+            if (!strcmp(grpBuf, "apps")) {
+                *policy = SP_FOREGROUND;
+            } else if (!strcmp(grpBuf, "apps/bg_non_interactive")) {
+                *policy = SP_BACKGROUND;
+            } else {
+                errno = ERANGE;
+                return -1;
+            }
         } else {
-            errno = ERANGE;
-            return -1;
+            /* AOSP cgroup hierarchy */
+            if (grpBuf[0] == '\0') {
+                *policy = SP_FOREGROUND;
+            } else if (!strcmp(grpBuf, "bg_non_interactive")) {
+                *policy = SP_BACKGROUND;
+            } else {
+                errno = ERANGE;
+                return -1;
+            }
         }
     } else {
         int rc = sched_getscheduler(tid);

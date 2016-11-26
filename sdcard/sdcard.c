@@ -1951,6 +1951,17 @@ int sdcard_main(int argc, char **argv)
             uid = strtoul(arg, NULL, 10);
         } else if (!gid) {
             gid = strtoul(arg, NULL, 10);
+        } else if (!strcmp(arg, ".@meizu_protbox@")) {
+            /* Flyme hack: There are two extra arguments passed when using
+             * Flyme boot.img, which is irrelevant on CM. We should check for
+             * them and stop processing when found.
+             *
+             * As the actual parameters passed is appended to the end of the
+             * command line, we can simplify a bit by just breaking on
+             * encountering the signature string.
+             */
+            TRACE("ignoring extra arguments on Flyme");
+            break;
         } else {
             ERROR("too many arguments\n");
             return usage();

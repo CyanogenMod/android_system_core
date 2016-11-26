@@ -927,6 +927,9 @@ static bool selinux_is_disabled(void)
 static bool selinux_is_enforcing(void)
 {
 #ifdef ALLOW_DISABLE_SELINUX
+    /* things are getting hairier... disable during initial porting */
+    return false;
+
     char tmp[PROP_VALUE_MAX];
 
     if (property_get("ro.boot.selinux", tmp) == 0) {
