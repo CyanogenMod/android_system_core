@@ -17,6 +17,12 @@ LOCAL_SRC_FILES := \
 	healthd_mode_android.cpp \
 	BatteryMonitor.cpp \
 	BatteryPropertiesRegistrar.cpp
+	
+ifeq ($(strip $(BOARD_HEALTHD_CUSTOM_CHARGER)),)
+  LOCAL_SRC_FILES += healthd_mode_charger.cpp
+else
+  LOCAL_SRC_FILES += ../../../$(BOARD_HEALTHD_CUSTOM_CHARGER)
+endif
 
 ifeq ($(strip $(BOARD_HEALTHD_CUSTOM_CHARGER)),)
   LOCAL_SRC_FILES += healthd_mode_charger.cpp
