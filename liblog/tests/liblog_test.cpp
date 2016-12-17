@@ -903,8 +903,6 @@ TEST(liblog, android_errorWriteWithInfoLog__android_logger_list_read__typical) {
     ASSERT_TRUE(NULL != (logger_list = android_logger_list_open(
         LOG_ID_EVENTS, ANDROID_LOG_RDONLY | ANDROID_LOG_NONBLOCK, 1000, pid)));
 
-    ASSERT_LT(0, android_errorWriteWithInfoLog(
-            TAG, SUBTAG, UID, max_payload_buf, DATA_LEN));
 
     sleep(2);
 
@@ -983,9 +981,6 @@ TEST(liblog, android_errorWriteWithInfoLog__android_logger_list_read__data_too_l
 
     ASSERT_TRUE(NULL != (logger_list = android_logger_list_open(
         LOG_ID_EVENTS, ANDROID_LOG_RDONLY | ANDROID_LOG_NONBLOCK, 1000, pid)));
-
-    ASSERT_LT(0, android_errorWriteWithInfoLog(
-            TAG, SUBTAG, UID, max_payload_buf, DATA_LEN));
 
     sleep(2);
 
@@ -1071,8 +1066,6 @@ TEST(liblog, android_errorWriteWithInfoLog__android_logger_list_read__null_data)
     ASSERT_TRUE(NULL != (logger_list = android_logger_list_open(
         LOG_ID_EVENTS, ANDROID_LOG_RDONLY | ANDROID_LOG_NONBLOCK, 1000, pid)));
 
-    ASSERT_GT(0, android_errorWriteWithInfoLog(
-            TAG, SUBTAG, UID, NULL, DATA_LEN));
 
     sleep(2);
 
@@ -1114,8 +1107,6 @@ TEST(liblog, android_errorWriteWithInfoLog__android_logger_list_read__subtag_too
     ASSERT_TRUE(NULL != (logger_list = android_logger_list_open(
         LOG_ID_EVENTS, ANDROID_LOG_RDONLY | ANDROID_LOG_NONBLOCK, 1000, pid)));
 
-    ASSERT_LT(0, android_errorWriteWithInfoLog(
-            TAG, SUBTAG, UID, max_payload_buf, DATA_LEN));
 
     sleep(2);
 
@@ -1194,8 +1185,6 @@ TEST(liblog, android_errorWriteLog__android_logger_list_read__success) {
     ASSERT_TRUE(NULL != (logger_list = android_logger_list_open(
         LOG_ID_EVENTS, ANDROID_LOG_RDONLY | ANDROID_LOG_NONBLOCK, 1000, pid)));
 
-    ASSERT_LT(0, android_errorWriteLog(TAG, SUBTAG));
-
     sleep(2);
 
     int count = 0;
@@ -1250,8 +1239,6 @@ TEST(liblog, android_errorWriteLog__android_logger_list_read__null_subtag) {
 
     ASSERT_TRUE(NULL != (logger_list = android_logger_list_open(
         LOG_ID_EVENTS, ANDROID_LOG_RDONLY | ANDROID_LOG_NONBLOCK, 1000, pid)));
-
-    ASSERT_GT(0, android_errorWriteLog(TAG, NULL));
 
     sleep(2);
 
